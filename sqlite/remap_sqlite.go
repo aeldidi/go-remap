@@ -88,19 +88,28 @@ func (d *SQLiteConn) SetIfNotExists(key string, value string) (bool, error) {
 }
 
 func (d *SQLiteConn) GetString(key string) (string, error) {
-	var result string
+	var result sql.NullString
 	err := d.db.QueryRow(`
 	SELECT v.mapvalue
 		FROM remap_keys AS k, remap_values AS v
 		WHERE k.mapkey=? AND k.maptype=? AND v.id=k.id;
 	`, key, typeString).Scan(&result)
 	if errors.Is(err, sql.ErrNoRows) {
+		return "", remap.ErrNotFound
+	} else if !result.Valid {
 		return "null", nil
 	} else if err != nil {
 		return "", fmt.Errorf("error in SQLite driver: %w", err)
 	}
 
-	return result, nil
+	return result.String, nil
+}
+
+func (c *SQLiteConn) DelString(key string) error {
+	_, err := c.db.Exec(`
+	DELETE FROM remap_keys WHERE mapkey=?;
+	`, key)
+	return err
 }
 
 func (d *SQLiteConn) SetString(key string, value string) error {

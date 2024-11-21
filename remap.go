@@ -60,6 +60,7 @@ type Conn interface {
 	SetString(key string, value string) error
 	// Returns the JSON representation of the type.
 	GetString(key string) (string, error)
+	DelString(key string) error
 }
 
 var drivers = make(map[string]Driver)
@@ -136,6 +137,17 @@ func (m *Map) Set(key string, value any) error {
 	return nil
 }
 
+func (m *Map) Del(key string) error {
+	if err := m.c.DelString(key); err != nil {
+		return fmt.Errorf("error deleting key: %w", err)
+	}
+
+	return nil
+}
+
+var ErrNotFound = errors.New("the requested key was not present")
+
+// Returns [ErrNotFound] if the key is not set.
 func (m *Map) Get(key string, value any) error {
 	rv := reflect.ValueOf(value)
 	switch reflect.Indirect(rv).Kind() {
