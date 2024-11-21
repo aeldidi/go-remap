@@ -40,6 +40,26 @@ func TestBasic(t *testing.T) {
 	}
 }
 
+func TestDel(t *testing.T) {
+	m := newMap("TestDel", t)
+	if err := m.Set("cool", "beans"); err != nil {
+		t.Fatal(err)
+	}
+
+	var value string
+	if err := m.Get("cool", &value); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.Del("cool"); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.Get("cool", &value); err == nil {
+		t.Fatal("deleted value still remains")
+	}
+}
+
 func TestSetIfNotExist(t *testing.T) {
 	m := newMap("TestSetIfNotExist", t)
 	ok, err := m.SetIfNotExists("cool", "beans")
