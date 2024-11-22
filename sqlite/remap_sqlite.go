@@ -62,7 +62,7 @@ func (d *SQLiteConn) SetIfNotExists(key string, value string) (bool, error) {
 		`, []driver.Value{int64(typeString), key})
 		if errors.Is(err, sqlite3.ErrConstraintUnique) {
 			success = false
-			return remap.ErrDup
+			return nil
 		} else if err != nil {
 			return fmt.Errorf("error inserting values: %w", err)
 		}
@@ -76,7 +76,10 @@ func (d *SQLiteConn) SetIfNotExists(key string, value string) (bool, error) {
 		INSERT INTO remap_values (id, mapvalue) VALUES (?, ?)
 			ON CONFLICT DO UPDATE SET mapvalue=?;
 		`, []driver.Value{id, value, value})
-		if err != nil {
+		if errors.Is(err, sqlite3.ErrConstraintUnique) {
+			success = false
+			return nil
+		} else if err != nil {
 			return fmt.Errorf("error inserting values: %w", err)
 		}
 
@@ -192,9 +195,7 @@ func (d *SQLiteConn) doTransaction(
 
 		return tx.Commit()
 	})
-	if errors.Is(err, remap.ErrDup) {
-		return err
-	} else if err != nil {
+	if err != nil {
 		return fmt.Errorf("error in SQLite driver: %w", err)
 	}
 
