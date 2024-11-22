@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 	"sync"
 )
 
@@ -92,21 +91,9 @@ var ErrInvalidType = errors.New("value type cannot be set atomically")
 // SetIfNotExists sets the given key to a value and returns `true` if the key
 // could be set, or `false` if the key already exists.
 //
-// Returns [ErrInvalidType] if the value would be marshalled as a JSON object
-// or array, as they cannot be set atomically.
-//
 // Also returns an error if the value could not be marshalled into JSON, or if
 // the backing store returned an error.
 func (m *Map) SetIfNotExists(key string, value any) (bool, error) {
-	rv := reflect.ValueOf(value)
-	switch reflect.Indirect(rv).Kind() {
-	case reflect.Map, reflect.Array, reflect.Struct, reflect.Slice,
-		reflect.Chan:
-		return false, ErrInvalidType
-	default:
-		break
-	}
-
 	bytes, err := json.Marshal(value)
 	if err != nil {
 		return false, fmt.Errorf("error marshalling value to JSON: %w", err)
@@ -116,15 +103,6 @@ func (m *Map) SetIfNotExists(key string, value any) (bool, error) {
 }
 
 func (m *Map) Set(key string, value any) error {
-	rv := reflect.ValueOf(value)
-	switch reflect.Indirect(rv).Kind() {
-	case reflect.Map, reflect.Array, reflect.Struct, reflect.Slice,
-		reflect.Chan:
-		panic("remap: arrays and structs not yet implemented")
-	default:
-		break
-	}
-
 	bytes, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("error marshalling value to JSON: %w", err)
@@ -149,15 +127,6 @@ var ErrNotFound = errors.New("the requested key was not present")
 
 // Returns [ErrNotFound] if the key is not set.
 func (m *Map) Get(key string, value any) error {
-	rv := reflect.ValueOf(value)
-	switch reflect.Indirect(rv).Kind() {
-	case reflect.Map, reflect.Array, reflect.Struct, reflect.Slice,
-		reflect.Chan:
-		panic("remap: arrays and structs not yet implemented")
-	default:
-		break
-	}
-
 	s, err := m.c.GetString(key)
 	if err != nil {
 		return fmt.Errorf("error getting value: %w", err)
