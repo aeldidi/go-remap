@@ -102,7 +102,7 @@ func (d *SQLiteConn) GetString(key string) (string, error) {
 		return "", fmt.Errorf("error in SQLite driver: %w", err)
 	}
 
-	return result.String, nil
+	return fmt.Sprintf(`"%v"`, result.String), nil
 }
 
 func (c *SQLiteConn) DelString(key string) error {

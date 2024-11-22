@@ -1,3 +1,5 @@
+PRAGMA journal_mode=WAL;
+
 CREATE TABLE IF NOT EXISTS remap_keys (
     id       INTEGER NOT NULL,
     -- 1 string, 2 object, 3 array
